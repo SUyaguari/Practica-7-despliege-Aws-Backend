@@ -11,14 +11,14 @@ import type {
 
 export class MongoEmployeeRepository implements IEmployeeRepository {
   async findAll(): Promise<Employee[]> {
-    const employees = await EmployeeModel.find().sort({ _id: -1 });
+    const employees = await EmployeeModel.find().sort({ createdAt: -1, _id: -1 });
     return employees.map((employee) => this.toDomain(employee));
   }
 
   async findPaginated({ page, limit }: PaginationOptions): Promise<PaginatedEmployees> {
     const skip = (page - 1) * limit;
     const [employees, total] = await Promise.all([
-      EmployeeModel.find().sort({ _id: -1 }).skip(skip).limit(limit),
+      EmployeeModel.find().sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit),
       EmployeeModel.countDocuments(),
     ]);
 
