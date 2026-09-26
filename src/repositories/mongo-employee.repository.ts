@@ -4,13 +4,31 @@ import type {
   CreateEmployeeData,
   Employee,
   IEmployeeRepository,
+  PaginatedEmployees,
+  PaginationOptions,
   UpdateEmployeeData,
 } from './employee.repository.interface.js';
 
 export class MongoEmployeeRepository implements IEmployeeRepository {
   async findAll(): Promise<Employee[]> {
-    const employees = await EmployeeModel.find();
+    const employees = await EmployeeModel.find().sort({ createdAt: -1 });
     return employees.map((employee) => this.toDomain(employee));
+  }
+
+  async findPaginated({ page, limit }: PaginationOptions): Promise<PaginatedEmployees> {
+    const skip = (page - 1) * limit;
+    const [employees, total] = await Promise.all([
+      EmployeeModel.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      EmployeeModel.countDocuments(),
+    ]);
+
+    return {
+      items: employees.map((employee) => this.toDomain(employee)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async create(data: CreateEmployeeData): Promise<Employee> {

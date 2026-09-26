@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type { ZodType } from 'zod';
 import { AppError } from '../utils/app-error.js';
 
-type Target = 'body' | 'params';
+type Target = 'body' | 'params' | 'query';
 
 export const validate =
   (schema: ZodType, target: Target = 'body') =>
@@ -20,5 +20,6 @@ export const validate =
 
     // body se reemplaza por la versión saneada (trim, sin campos extra); params se conserva
     if (target === 'body') req.body = result.data;
+    if (target === 'query') req.query = result.data as Request['query'];
     next();
   };

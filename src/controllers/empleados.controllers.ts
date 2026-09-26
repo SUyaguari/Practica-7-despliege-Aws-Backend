@@ -1,13 +1,17 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { EmployeeIdParams } from '../dtos/employee.dto.js';
+import type { EmployeeIdParams, EmployeePaginationQuery } from '../dtos/employee.dto.js';
 import type { IEmployeeRepository } from '../repositories/employee.repository.interface.js';
 import { ResponseWrapper } from '../utils/api-response.js';
 import { AppError } from '../utils/app-error.js';
 
 export const createEmployeeController = (employeeRepository: IEmployeeRepository) => ({
-  getEmpleado: async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getEmpleado: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const empleados = await employeeRepository.findAll();
+      const { page, limit } = req.query as unknown as EmployeePaginationQuery;
+      const shouldPaginate = page !== undefined || limit !== undefined;
+      const empleados = shouldPaginate
+        ? await employeeRepository.findPaginated({ page: page ?? 1, limit: limit ?? 10 })
+        : await employeeRepository.findAll();
       ResponseWrapper.success(res, empleados, 'Empleados obtenidos');
     } catch (error) {
       next(error);
@@ -24,12 +28,13 @@ export const createEmployeeController = (employeeRepository: IEmployeeRepository
   },
 
   updateEmpleado: async (
-    req: Request<EmployeeIdParams>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const empleado = await employeeRepository.update(req.params.id, req.body);
+      const { id } = req.params as EmployeeIdParams;
+      const empleado = await employeeRepository.update(id, req.body);
       if (!empleado) throw AppError.notFound('Empleado no encontrado');
       ResponseWrapper.success(res, empleado, 'Empleado actualizado');
     } catch (error) {
@@ -38,12 +43,13 @@ export const createEmployeeController = (employeeRepository: IEmployeeRepository
   },
 
   deleteEmpleado: async (
-    req: Request<EmployeeIdParams>,
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const empleado = await employeeRepository.delete(req.params.id);
+      const { id } = req.params as EmployeeIdParams;
+      const empleado = await employeeRepository.delete(id);
       if (!empleado) throw AppError.notFound('Empleado no encontrado');
       ResponseWrapper.success(res, null, 'Empleado eliminado');
     } catch (error) {

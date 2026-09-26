@@ -3,13 +3,14 @@ import { employeeController } from '../dependencies.js';
 import {
   createEmployeeSchema,
   employeeIdParamsSchema,
+  employeePaginationQuerySchema,
   updateEmployeeSchema,
 } from '../dtos/employee.dto.js';
 import { validate } from '../middlewares/validate.middleware.js';
 
 const router = Router();
 
-router.get('/empleados', employeeController.getEmpleado);
+router.get('/empleados', validate(employeePaginationQuerySchema, 'query'), employeeController.getEmpleado);
 router.post('/empleados', validate(createEmployeeSchema), employeeController.addEmpleado);
 router.put(
   '/empleados/:id',

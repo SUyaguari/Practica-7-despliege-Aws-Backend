@@ -4,6 +4,7 @@ import type {
   CreateEmployeeData,
   Employee,
   IEmployeeRepository,
+  PaginatedEmployees,
 } from '../repositories/employee.repository.interface.js';
 import { createEmployeeController } from './empleados.controllers.js';
 
@@ -28,6 +29,7 @@ describe('🧪 Unit Test: EmployeeController (Mantenibilidad & Testabilidad)', (
     // 1. Mock 100% aislado de la interfaz (cero dependencia de Mongoose)
     mockRepository = {
       findAll: jest.fn(),
+      findPaginated: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -38,13 +40,13 @@ describe('🧪 Unit Test: EmployeeController (Mantenibilidad & Testabilidad)', (
     // 2. Mock del ciclo de vida de Express
     jsonMock = jest.fn();
     statusMock = jest.fn().mockReturnValue({ json: jsonMock });
-    mockResponse = { status: statusMock };
+    mockResponse = { status: statusMock as unknown as Response['status'] };
     nextMock = jest.fn();
   });
 
-  it('getEmpleado: debería retornar 200 y la lista de empleados de la abstracción', async () => {
+  it('getEmpleado: debería retornar 200 y todos los empleados si no recibe paginación', async () => {
     mockRepository.findAll.mockResolvedValue([fakeEmployee]);
-    mockRequest = {};
+    mockRequest = { query: {} };
 
     await controller.getEmpleado(mockRequest as Request, mockResponse as Response, nextMock);
 
@@ -53,12 +55,33 @@ describe('🧪 Unit Test: EmployeeController (Mantenibilidad & Testabilidad)', (
       expect.objectContaining({ success: true, data: [fakeEmployee] }),
     );
     expect(mockRepository.findAll).toHaveBeenCalledTimes(1);
+    expect(mockRepository.findPaginated).not.toHaveBeenCalled();
+  });
+
+  it('getEmpleado: debería retornar 200 y la lista paginada cuando recibe query', async () => {
+    const paginatedEmployees: PaginatedEmployees = {
+      items: [fakeEmployee],
+      total: 1,
+      page: 1,
+      limit: 10,
+      totalPages: 1,
+    };
+    mockRepository.findPaginated.mockResolvedValue(paginatedEmployees);
+    mockRequest = { query: { page: 1, limit: 10 } as unknown as Request['query'] };
+
+    await controller.getEmpleado(mockRequest as Request, mockResponse as Response, nextMock);
+
+    expect(statusMock).toHaveBeenCalledWith(200);
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({ success: true, data: paginatedEmployees }),
+    );
+    expect(mockRepository.findPaginated).toHaveBeenCalledWith({ page: 1, limit: 10 });
   });
 
   it('getEmpleado: debería delegar el error al middleware si el repositorio falla', async () => {
     const dbError = new Error('Fallo de conexión simulado');
     mockRepository.findAll.mockRejectedValue(dbError);
-    mockRequest = {};
+    mockRequest = { query: {} };
 
     await controller.getEmpleado(mockRequest as Request, mockResponse as Response, nextMock);
 

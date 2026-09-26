@@ -6,6 +6,11 @@ export const employeeIdParamsSchema = z.object({
     .regex(/^[0-9a-fA-F]{24}$/, 'El id debe ser un ObjectId válido de 24 caracteres hexadecimales'),
 });
 
+export const employeePaginationQuerySchema = z.strictObject({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
 const text = (campo: string) =>
   z
     .string(`${campo} es obligatorio y debe ser texto`)
@@ -30,5 +35,6 @@ export const updateEmployeeSchema = createEmployeeSchema
   });
 
 export type EmployeeIdParams = z.infer<typeof employeeIdParamsSchema>;
+export type EmployeePaginationQuery = z.infer<typeof employeePaginationQuerySchema>;
 export type CreateEmployeeDto = z.infer<typeof createEmployeeSchema>;
 export type UpdateEmployeeDto = z.infer<typeof updateEmployeeSchema>;
