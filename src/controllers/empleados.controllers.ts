@@ -7,7 +7,7 @@ import { AppError } from '../utils/app-error.js';
 export const createEmployeeController = (employeeRepository: IEmployeeRepository) => ({
   getEmpleado: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { page, limit } = req.query as unknown as EmployeePaginationQuery;
+      const { page, limit } = (res.locals?.validatedQuery ?? req.query) as EmployeePaginationQuery;
       const shouldPaginate = page !== undefined || limit !== undefined;
       const empleados = shouldPaginate
         ? await employeeRepository.findPaginated({ page: page ?? 1, limit: limit ?? 10 })

@@ -6,7 +6,7 @@ type Target = 'body' | 'params' | 'query';
 
 export const validate =
   (schema: ZodType, target: Target = 'body') =>
-  (req: Request, _res: Response, next: NextFunction): void => {
+  (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req[target]);
 
     if (!result.success) {
@@ -20,6 +20,6 @@ export const validate =
 
     // body se reemplaza por la versión saneada (trim, sin campos extra); params se conserva
     if (target === 'body') req.body = result.data;
-    if (target === 'query') req.query = result.data as Request['query'];
+    if (target === 'query') res.locals.validatedQuery = result.data;
     next();
   };
