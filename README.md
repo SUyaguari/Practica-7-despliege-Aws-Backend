@@ -34,8 +34,12 @@ Copy-Item .env.example .env
 
 ```env
 PORT=3000
+APP_NAME=practica-7-backend
 MONGO_URI=mongodb+srv://usuario:password@cluster.mongodb.net/usuarios_db?retryWrites=true&w=majority&appName=Cluster0
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/TU/WEBHOOK/AQUI
 ```
+
+`SLACK_WEBHOOK_URL` es opcional. Si esta configurada, el backend enviara avisos a Slack cuando MongoDB conecte correctamente, falle al conectar, reporte un error o se desconecte mientras la app esta corriendo.
 
 ## Levantar el proyecto
 
